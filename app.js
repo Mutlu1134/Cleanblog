@@ -1,6 +1,10 @@
 import express from "express";
 import mongoose from "mongoose";
 import Post from "./models/Post.js";
+import methodOverride from "method-override";
+import pageController from "./controllers/pageController.js";
+import postController from "./controllers/postController.js";
+
 const app = express();
 const port = 8000;
 
@@ -19,32 +23,15 @@ app.set('view engine', 'ejs');
 app.use(express.static('./public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(methodOverride('_method', { methods : [ 'POST', 'GET']}));
 
 //ROUTING
-app.get('/', async (req, res) => {
-	console.log(Post.find({}));
-	const posts = await Post.find({});
-	res.render('../view/index.ejs', {
-		posts,
-	}); // index.ejs dosyasına posts collection'ı de göndermek
-}); 
-app.get('/index', async (req, res) => {
-	const posts = await Post.find({});
-	res.render('../view/index.ejs', {
-		posts,
-	}); // index.ejs dosyasına posts collection'ı de göndermek
-});
-app.get('/about', (req, res) => {
-	res.render('../view/about.ejs'); 
-});
-app.get('/add_post', (req, res) => {
-	res.render('../view/add_post.ejs'); 
-});
+app.get('/', postController.getAllPosts); 
+app.get('/index', postController.getAllPosts);
+app.put("/post/update/:id", postController.updatePost); 
+app.delete("/post/delete/:id", postController.deletePost); 
+app.get('/post/:id', postController.getClickedPost);
+app.post('/Post', postController.createPost);
 
-
-app.post('/Post', async (req, res) => {
-	// asenkron yapmak için async await yapmamız lazım
-	// console.log(req.body); // yalnızca konsolda görüp deneme yapmak için kullanılabilir.
-	await Post.create(req.body); // post edilen formdaki title ve description ve diğer img vs. veritabanına ekleniyor.
-	res.redirect('/'); // req-res döngüsünü sonlandırmak için anasayfaya redirect ettik.
-});
+app.get('/about', pageController.getAboutPage);
+app.get('/add_post', pageController.getAddPostPage);
